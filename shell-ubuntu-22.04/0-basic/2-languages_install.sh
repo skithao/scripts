@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# 脚本说明：
+# 该脚本用于在 Ubuntu 22.04 上安装常用编程语言环境。
+# 脚本会提示用户选择要安装的语言环境，并安装相应的环境。
+# 脚本会安装以下语言环境：
+# - C
+# - C++
+# - Java
+# - Python
+# - Rust
+
 # 定义默认版本
 DEFAULT_C_VERSION="gcc-11"
 DEFAULT_CPP_VERSION="g++-11"
@@ -12,8 +22,7 @@ install_language() {
     language=$1
     version=$2
 
-    read -p "是否安装 $language $version (y/n)？" install_confirmation
-    if [[ $install_confirmation =~ ^[Yy]$ ]]; then
+    if (whiptail --yesno "是否安装 $language $version ?" 8 45) then
         echo "正在安装 $language..."
         sudo apt update
         if [[ $language == "C" || $language == "C++" ]]; then
@@ -25,59 +34,54 @@ install_language() {
         elif [[ $language == "Rust" ]]; then
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
         else
-            echo "未知语言：$language"
+            whiptail --msgbox "未知语言：$language" 8 45
             return 1
         fi
-        echo "$language 安装完成。"
+        whiptail --msgbox "$language 安装完成。" 8 45
     else
-        echo "跳过 $language 的安装。"
+        whiptail --msgbox "跳过 $language 的安装。" 8 45
     fi
 }
 
 # 显示欢迎信息
-echo "欢迎使用一键部署脚本"
-echo "请选择你想要安装的语言环境："
-echo "1) C"
-echo "2) C++"
-echo "3) Java"
-echo "4) Python"
-echo "5) Rust"
-echo "6) 全部"
-echo "7) 退出"
-read -p "请输入你的选择（1-7）： " choice
+whiptail --msgbox "欢迎使用一键部署脚本" 8 45
+
+# 选择要安装的语言环境
+options=("C" "C++" "Java" "Python" "Rust" "全部" "退出")
+choice=$(whiptail --menu "请选择你想要安装的语言环境：" 15 60 7 "${options[@]}" 3>&1 1>&2 2>&3)
 
 case $choice in
-    1)
+    "C")
         install_language "C" "$DEFAULT_C_VERSION"
         ;;
-    2)
+    "C++")
         install_language "C++" "$DEFAULT_CPP_VERSION"
         ;;
-    3)
+    "Java")
         install_language "Java" "$DEFAULT_JAVA_VERSION"
         ;;
-    4)
+    "Python")
         install_language "Python" "$DEFAULT_PYTHON_VERSION"
         ;;
-    5)
+    "Rust")
         install_language "Rust" "$DEFAULT_RUST_VERSION"
         ;;
-    6)
+    "全部")
         install_language "C" "$DEFAULT_C_VERSION"
         install_language "C++" "$DEFAULT_CPP_VERSION"
         install_language "Java" "$DEFAULT_JAVA_VERSION"
         install_language "Python" "$DEFAULT_PYTHON_VERSION"
         install_language "Rust" "$DEFAULT_RUST_VERSION"
         ;;
-    7)
-        echo "退出脚本。"
+    "退出")
+        whiptail --msgbox "退出脚本。" 8 45
         exit 0
         ;;
     *)
-        echo "无效的选项，请重新运行脚本。"
+        whiptail --msgbox "无效的选项，请重新运行脚本。" 8 45
         exit 1
         ;;
 esac
 
 # 脚本结束
-echo "脚本执行完毕。"
+whiptail --msgbox "脚本执行完毕。" 8 45
