@@ -1,87 +1,69 @@
 #!/bin/bash
 
-# 脚本说明：
-# 该脚本用于在 Ubuntu 22.04 上安装常用编程语言环境。
-# 脚本会提示用户选择要安装的语言环境，并安装相应的环境。
-# 脚本会安装以下语言环境：
-# - C
-# - C++
-# - Java
-# - Python
-# - Rust
+# 颜色定义
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+BLUE=$(tput setaf 4)
+MAGENTA=$(tput setaf 5)
+CYAN=$(tput setaf 6)
+WHITE=$(tput setaf 7)
+RESET=$(tput sgr0)
 
-# 定义默认版本
-DEFAULT_C_VERSION="gcc-11"
-DEFAULT_CPP_VERSION="g++-11"
-DEFAULT_JAVA_VERSION="openjdk-11-jdk"
-DEFAULT_PYTHON_VERSION="python3.10"
-DEFAULT_RUST_VERSION="rustc 1.62.1"
-
-# 安装语言环境的函数
-install_language() {
-    language=$1
-    version=$2
-
-    if (whiptail --yesno "是否安装 $language $version ?" 8 45) then
-        echo "正在安装 $language..."
-        sudo apt update
-        if [[ $language == "C" || $language == "C++" ]]; then
-            sudo apt install -y $version
-        elif [[ $language == "Java" ]]; then
-            sudo apt install -y $version
-        elif [[ $language == "Python" ]]; then
-            sudo apt install -y $version
-        elif [[ $language == "Rust" ]]; then
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-        else
-            whiptail --msgbox "未知语言：$language" 8 45
-            return 1
-        fi
-        whiptail --msgbox "$language 安装完成。" 8 45
-    else
-        whiptail --msgbox "跳过 $language 的安装。" 8 45
-    fi
+# 菜单函数
+show_menu() {
+    echo -e "${YELLOW}
+    ==================== 程序语言环境安装器 ===================="
+    echo -e "1. 安装 C 语言环境"
+    echo -e "2. 安装 C++ 语言环境"
+    echo -e "3. 安装 Python 环境"
+    echo -e "4. 安装 Rust 环境"
+    echo -e "5. 安装所有环境"
+    echo -e "${RESET}请输入你的选择 (1-5):"
 }
 
-# 显示欢迎信息
-whiptail --msgbox "欢迎使用一键部署脚本" 8 45
+# 安装函数
+install_environment() {
+    local language=$1
+    echo -e "${GREEN}正在安装 ${language} 环境...${RESET}"
+    case $language in
+        "C") sudo apt update && sudo apt install -y build-essential ;;
+        "C++") sudo apt update && sudo apt install -y build-essential ;;
+        "Python") sudo apt update && sudo apt install -y python3 python3-dev ;;
+        "Rust") curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh ;;
+    esac
+}
 
-# 选择要安装的语言环境
-options=("C" "C++" "Java" "Python" "Rust" "全部" "退出")
-choice=$(whiptail --menu "请选择你想要安装的语言环境：" 15 60 7 "${options[@]}" 3>&1 1>&2 2>&3)
+# 主逻辑
+while true; do
+    show_menu
+    read -r choice
+    case $choice in
+        1) install_environment "C";;
+        2) install_environment "C++";;
+        3) install_environment "Python";;
+        4) install_environment "Rust";;
+        5) 
+            install_environment "C"
+            install_environment "C++"
+            install_environment "Python"
+            install_environment "Rust"
+            echo -e "${GREEN}所有环境已安装完毕。${RESET}"
+            ;;
+        *) echo -e "${RED}无效选择，请重新尝试。${RESET}";;
+    esac
+    # 更新环境变量
+    source ~/.bashrc
+    # 更新软件源
+    sudo apt update
+    sudo apt upgrade -y
+        echo -e "${CYAN}您想要安装另一个环境吗？ (y/n)${RESET}"
+    read -r confirm
+    if [[ $confirm != [Yy] ]]; then
+        # 清屏
+        clear
+        break
+    fi
+done
 
-case $choice in
-    "C")
-        install_language "C" "$DEFAULT_C_VERSION"
-        ;;
-    "C++")
-        install_language "C++" "$DEFAULT_CPP_VERSION"
-        ;;
-    "Java")
-        install_language "Java" "$DEFAULT_JAVA_VERSION"
-        ;;
-    "Python")
-        install_language "Python" "$DEFAULT_PYTHON_VERSION"
-        ;;
-    "Rust")
-        install_language "Rust" "$DEFAULT_RUST_VERSION"
-        ;;
-    "全部")
-        install_language "C" "$DEFAULT_C_VERSION"
-        install_language "C++" "$DEFAULT_CPP_VERSION"
-        install_language "Java" "$DEFAULT_JAVA_VERSION"
-        install_language "Python" "$DEFAULT_PYTHON_VERSION"
-        install_language "Rust" "$DEFAULT_RUST_VERSION"
-        ;;
-    "退出")
-        whiptail --msgbox "退出脚本。" 8 45
-        exit 0
-        ;;
-    *)
-        whiptail --msgbox "无效的选项，请重新运行脚本。" 8 45
-        exit 1
-        ;;
-esac
-
-# 脚本结束
-whiptail --msgbox "脚本执行完毕。" 8 45
+echo -e "${WHITE}感谢使用程序语言环境安装器。${RESET}"
